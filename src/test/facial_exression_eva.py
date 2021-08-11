@@ -7,9 +7,11 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
 import numpy as np
 
-RESULT_FILE_PATH = '../../data/error_analysis/mobilenetv2/affectnet_mobilenetv2_base.txt'
-IMG_OUT_ROOT_DIR = '/media/ruiming/data/workspace/pro/facialExpression/data/error_analysis/mobilenetv2'
-CONFUSION_MATRIX_IMG_OUT_PATH = os.path.join(IMG_OUT_ROOT_DIR, 'confusion_matrix_mobilenetv2.png')
+IMG_OUT_ROOT_DIR = '/home/ruiming/workspace/pro/facialExpression/data/error_analysis/affectnet_mobilenet_cleanaffectnetval_heavyonly_result'
+if not os.path.exists(IMG_OUT_ROOT_DIR):
+    os.makedirs(IMG_OUT_ROOT_DIR)
+RESULT_FILE_PATH = '/home/ruiming/workspace/pro/facialExpression/data/error_analysis/affectnet_mobilenet_cleanaffectnetval_heavyonly_result/affectnet_mobilenet_cleanaffectnetval_heavyonly_result.txt'
+CONFUSION_MATRIX_IMG_OUT_PATH = os.path.join(IMG_OUT_ROOT_DIR, 'confusion_matrix_affectnet_mobilenet_cleanaffectnetval_heavyonly_result.png')
 
 label_map = {0:'Angry', 1:'Happy', 2:'Neutral', 3:'Sad'}
 labels_name = ['Angry', 'Happy', 'Neutral', 'Sad']
