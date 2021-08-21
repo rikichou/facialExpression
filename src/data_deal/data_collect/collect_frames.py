@@ -17,8 +17,10 @@ from pathlib import Path
 import cv2
 
 from utils.face_det_python import scrfd
+from utils.scn_python import scn
+from utils.mmcls_python import mmcls_fer
 from utils import common
-from mmcls.apis import inference_model, init_model, show_result_pyplot
+
 from multiprocessing import Process, Lock, Value
 
 dir_label_map = {0:'Angry', 1:'Happy', 2:'Neutral', 3:'Sad'}
@@ -55,28 +57,6 @@ def parse_args():
     args = parser.parse_args()
     return args
 
-def get_input_face(image, rect):
-    sx,sy,ex,ey = rect
-    h,w,c = image.shape
-    faceh = ey-sy
-    facew = ex-sx
-
-    longsize = max(faceh, facew)
-    expendw = longsize-facew
-    expendh  = longsize-faceh
-
-    sx = sx-(expendw/2)
-    ex = ex+(expendw/2)
-    sy = sy-(expendh/2)
-    ey = ey+(expendh/2)
-
-    sx = int(max(0, sx))
-    sy = int(max(0, sy))
-    ex = int(min(w-1, ex))
-    ey = int(min(h-1, ey))
-
-    return image[sy:ey, sx:ex, :], sx, sy, ex, ey
-
 def frame_deal(paths, args, lock, counter, total_length):
     # init face detection model
     fd = scrfd.ScrdfFaceDet(0.45,
@@ -84,16 +64,18 @@ def frame_deal(paths, args, lock, counter, total_length):
                             device='cpu' if args.cpu else 'cuda',
                             config='../utils/face_det_python/models/scrfd_500m.py')
 
-    # init facial expression model
-    config_file_path = os.path.join(args.mmcls_src_dir, 'configs/fer/mobilenet_v2.py')
-    ckpt_path = os.path.join(args.mmcls_src_dir, 'run/fer/mobilenetv2/latest.pth')
-    model = init_model(config_file_path, ckpt_path, device='cpu' if args.cpu else 'cuda')
-    model.CLASSES = list(dir_label_map)
+    # init facial expression model : mmclassification
+    fer_mmcls = mmcls_fer.MMCLSFer(config_file_path=os.path.join(args.mmcls_src_dir, 'configs/fer/mobilenet_v2.py'),
+                                   ckpt_path=os.path.join(args.mmcls_src_dir, 'run/fer/mobilenetv2/latest.pth'),
+                                   device='cpu' if args.cpu else 'cuda')
+    # init facial expression model : SCN
+    fer_scn = scn.ScnFacialExpressionCat(model_path='../utils/scn_python/models/epoch26_acc0.8615.pth', device='cpu' if args.cpu else 'cuda')
 
     for path in paths:
         frame = cv2.imread(path)
         if frame is None:
             continue
+
         # face detection
         image = frame
         result = fd.forward(image)
@@ -103,18 +85,16 @@ def frame_deal(paths, args, lock, counter, total_length):
         sx, sy, ex, ey, prob = box
         if prob < 0.45:
             continue
-        image_face, isx, isy, iex, iey = get_input_face(image, [sx, sy, ex, ey])
 
-        # inference image with
-        result = inference_model(model, image_face, face_rect=None)
+        # facial expression
+        #pred_label, pred_sclore, pred_name = fer_mmcls(image, [sx,sy,ex,ey])
+        pred_label, pred_sclore, pred_name = fer_scn(image, [sx, sy, ex, ey])
 
         # debug
-        print("Predict {}".format(result['pred_label']))
-        print(result, model.CLASSES)
-        cv2.rectangle(image, (isx, isy), (iex, iey), (255, 0, 0), 10)
-        cv2.putText(image, '{}:{:.3f}'.format(dir_label_map[result['pred_label']], result['pred_score']), (sx, sy - 20),
+        cv2.rectangle(image, (sx, sy), (ex, ey), (255, 0, 0), 10)
+        cv2.putText(image, '{}:{:.3f}'.format(pred_name, pred_sclore), (sx, sy - 20),
                     0, 2, (0, 0, 255), 2)
-        cv2.imshow(dir_label_map[result['pred_label']], image)
+        cv2.imshow('debug', image)
         if cv2.waitKey(0) & 0xff == ord('q'):
             break
 
