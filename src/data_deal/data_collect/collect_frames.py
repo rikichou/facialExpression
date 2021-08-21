@@ -65,8 +65,8 @@ def frame_deal(paths, args, lock, counter, total_length):
                             config='../utils/face_det_python/models/scrfd_500m.py')
 
     # init facial expression model : mmclassification
-    fer_mmcls = mmcls_fer.MMCLSFer(config_file_path=os.path.join(args.mmcls_src_dir, 'configs/fer/mobilenet_v2.py'),
-                                   ckpt_path=os.path.join(args.mmcls_src_dir, 'run/fer/mobilenetv2/latest.pth'),
+    fer_mmcls = mmcls_fer.MMCLSFer(config_file_path='../utils/mmcls_python/models/mobilenet_v2/mobilenet_v2.py',
+                                   ckpt_path='../utils/mmcls_python/models/mobilenet_v2/latest.pth',
                                    device='cpu' if args.cpu else 'cuda')
     # init facial expression model : SCN
     fer_scn = scn.ScnFacialExpressionCat(model_path='../utils/scn_python/models/epoch26_acc0.8615.pth', device='cpu' if args.cpu else 'cuda')
