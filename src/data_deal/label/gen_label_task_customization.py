@@ -1,8 +1,10 @@
+import sys
+sys.path.append('..')
 import os
 from utils import common
 
 DATASET_ROOT_DIR = '/train_tmp/fer/select/finish2'
-OUT_FILE_PATH = '/train_tmp/fer/select/finish2/train.txt'
+OUT_FILE_PATH = '/train_tmp/fer/select/finish2/train_mix.txt'
 
 phase = 'train'
 datasets = os.listdir(DATASET_ROOT_DIR)
@@ -18,10 +20,10 @@ with open(OUT_FILE_PATH, 'w') as fp:
             continue
 
         #cats_map = {'Angry':0, 'Happy':1, 'Neutral':2, 'Sad':3}
-        if 'streamax' == dataset:
+        if 'streamax' in dataset:
             cats_map = {'happy':1, 'neutral':2}
         else:
-            cats_map = {'angry_heavy': 0, 'angry_light': 0, 'sad_heavy': 3, 'sad_light': 3}
+            cats_map = {'angry_heavy': 0, 'angry_light': 0, 'sad_heavy': 3, 'sad_light': 3, 'happy':1, 'neutral':2}
 
         for cat in cats_map:
             count = 0
