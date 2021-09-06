@@ -5,7 +5,7 @@ import cv2
 import argparse
 from multiprocessing import Pool
 from pathlib import Path
-from tqdm import tqdm
+import tqdm
 
 def image_write(path_A, path_B, path_AB, img_size):
     im_A = cv2.imread(path_A, 1) # python2: cv2.CV_LOAD_IMAGE_COLOR; python3: cv2.IMREAD_COLOR
