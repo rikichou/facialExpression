@@ -9,7 +9,7 @@ elif sys.platform == 'win32':
     sys.path.append(r"D:\workspace\pro\source\yolov5")
 else:
     print('=>>>>load data from linux platform')
-    sys.path.append(r"/zhourui/workspace/pro/source/yolov5")
+    sys.path.append(r"/media/ruiming/data/workspace/pro/source/yolov5")
 
 import glob
 import argparse
