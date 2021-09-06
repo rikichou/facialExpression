@@ -20,7 +20,7 @@ parser.add_argument('--fold_A', dest='fold_A', help='input directory for image A
 parser.add_argument('--fold_B', dest='fold_B', help='input directory for image B', type=str, default='./VL/Strong')
 parser.add_argument('--fold_AB', dest='fold_AB', help='output directory', type=str, default='./NI_VL')
 parser.add_argument('--level', dest='level', help='directory level', type=int, default=3)
-parser.add_argument('--img_size', dest='img_size', help='image size', type=int, default=224)
+parser.add_argument('--img_size', dest='img_size', help='image size', type=int, default=256)
 parser.add_argument('--num_worker', dest='num_worker', help='worker num', type=int, default=8)
 args = parser.parse_args()
 
