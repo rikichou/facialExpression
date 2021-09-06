@@ -5,6 +5,7 @@ import cv2
 import argparse
 from multiprocessing import Pool
 from pathlib import Path
+from tqdm import tqdm
 
 def image_write(path_A, path_B, path_AB, img_size):
     im_A = cv2.imread(path_A, 1) # python2: cv2.CV_LOAD_IMAGE_COLOR; python3: cv2.IMREAD_COLOR
@@ -31,14 +32,18 @@ if not os.path.exists(args.fold_AB):
 fullpath_list = glob.glob(args.fold_A + str(Path('/*' * args.level)) + '.jpeg')
 pool=Pool()
 
-for sp in fullpath_list:
-    path_A = sp
+def deal_data(info):
+    global args
+    path_A,vid = info
     name_A = '/'.join(path_A.split('/')[-3:])
     name_AB = '_'.join(path_A.split('/')[-3:])
     path_B = os.path.join(args.fold_B, name_A)
     if os.path.isfile(path_A) and os.path.isfile(path_B):
         path_AB = os.path.join(args.fold_AB, name_AB)
-        pool.apply_async(image_write, args=(path_A, path_B, path_AB, args.img_size))
-if not args.no_multiprocessing:
-    pool.close()
-    pool.join()
+        image_write(path_A, path_B, path_AB, args.img_size)
+
+with Pool(args.num_worker) as pool:
+    r = list(
+        tqdm.tqdm(
+            pool.imap(deal_data,
+                      zip(fullpath_list, range(len(fullpath_list))))))
