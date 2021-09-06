@@ -109,13 +109,13 @@ def  process_paths(paths, args, lock, counter, total_length):
             out_img_path = os.path.join(out_dir, os.path.basename(img_path))
 
             sx, sy, ex, ey = bbox
-            face_img = get_input_face(image, bbox)
+            face_img,fsx, fsy, fex, fey = get_input_face(image, bbox)
 
-            #cv2.imwrite(out_img_path, face_img)
+            cv2.imwrite(out_img_path, face_img)
             # debug
-            cv2.rectangle(image, (int(sx), int(sy)), (int(ex), int(ey)), (0,0,255), 1)
-            cv2.imshow('1', image)
-            cv2.waitKey(0)
+            # cv2.rectangle(image, (int(sx), int(sy)), (int(ex), int(ey)), (0,0,255), 1)
+            # cv2.imshow('1', face_img)
+            # cv2.waitKey(0)
 
     # counter
     lock.acquire()
