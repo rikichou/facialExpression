@@ -7,7 +7,8 @@ if sys.platform == "darwin":
     yolov5_src = "/Users/zhourui/workspace/pro/source/yolov5"
 elif sys.platform == 'win32':
     print('=>>>>load data from window platform')
-    sys.path.append(r"D:\workspace\pro\source\yolov5")
+    #sys.path.append(r"D:\workspace\pro\source\yolov5")
+    sys.path.append(r"E:\workspace\pro\facialExpression\src\data_deal")
     yolov5_src = r"D:\workspace\pro\source\yolov5"
 else:
     print('=>>>>load data from linux platform')
@@ -19,10 +20,10 @@ import glob
 from pathlib import Path
 import cv2
 
-from common_utils.face_det_python import scrfd
-from common_utils.scn_python import scn
-from common_utils.mmcls_python import mmcls_fer
-from common_utils import common
+from utils.face_det_python import scrfd
+from utils.scn_python import scn
+from utils.mmcls_python import mmcls_fer
+from utils import common
 
 from multiprocessing import Process, Lock, Value
 
@@ -39,7 +40,7 @@ def parse_args():
     parser.add_argument(
         '--use_scrfd',
         action='store_true',
-        default=False,
+        default=True,
         help='choose face detection handler, yolov5 or scrfd')
     parser.add_argument(
         '--ext', type=str, default='jpg', help='out name')
@@ -65,13 +66,35 @@ def parse_args():
     args = parser.parse_args()
     return args
 
+def get_out_face_region(image, rect):
+    sx, sy, ex, ey = rect
+    h, w, c = image.shape
+    faceh = ey - sy
+    facew = ex - sx
+
+    longsize = max(faceh, facew)
+    expendw = longsize - facew
+    expendh = longsize - faceh
+
+    sx = sx - (expendw / 2)
+    ex = ex + (expendw / 2)
+    sy = sy - (expendh / 2)
+    ey = ey + (expendh / 2)
+
+    sx = int(max(0, sx))
+    sy = int(max(0, sy))
+    ex = int(min(w - 1, ex))
+    ey = int(min(h - 1, ey))
+
+    return image[sy:ey, sx:ex, :], sx, sy, ex, ey
+
 def frame_deal(paths, args, lock, counter, total_length):
     # init face detection model
     if args.use_scrfd:
         fd = scrfd.ScrdfFaceDet(0.45,
-                                model_path='common_utils/face_det_python/models/model.pth',
+                                model_path='utils/face_det_python/models/model.pth',
                                 device='cpu' if args.cpu else 'cuda',
-                                config='common_utils/face_det_python/models/scrfd_500m.py')
+                                config='utils/face_det_python/models/scrfd_500m.py')
     else:
         from FaceDetection import FaceDetect
         args.weights = os.path.join(yolov5_src, 'weights/200_last.pt')
@@ -79,44 +102,57 @@ def frame_deal(paths, args, lock, counter, total_length):
         fd = FaceDetect(args=args)
 
     # init facial expression model : mmclassification
-    fer_mmcls = mmcls_fer.MMCLSFer(config_file_path='../common_utils/mmcls_python/models/mobilenet_v2/mobilenet_v2.py',
-                                   ckpt_path='../common_utils/mmcls_python/models/mobilenet_v2/latest.pth',
+    fer_mmcls = mmcls_fer.MMCLSFer(config_file_path='utils/mmcls_python/models/resnet_18_dms_rgbnir/resnet_18_dms_rgbnir.py',
+                                   ckpt_path='utils/mmcls_python/models/resnet_18_dms_rgbnir/epoch_16.pth',
                                    device='cpu' if args.cpu else 'cuda')
     # init facial expression model : SCN
-    fer_scn = scn.ScnFacialExpressionCat(model_path='../common_utils/scn_python/models/epoch26_acc0.8615.pth', device='cpu' if args.cpu else 'cuda')
+    fer_scn = scn.ScnFacialExpressionCat(model_path='utils/scn_python/models/epoch26_acc0.8615.pth', device='cpu' if args.cpu else 'cuda')
 
     for path in paths:
         frame = cv2.imread(path)
         if frame is None:
             continue
         image = frame
+        bboxes = []
         if args.use_scrfd:
             result = fd.forward(image)
             if len(result) < 1:
                 continue
-            box = result[0]
-            sx, sy, ex, ey, prob = box
-            if prob < 0.45:
-                continue
+            for box in result:
+                sx, sy, ex, ey, prob = box
+                if prob < 0.45:
+                    continue
+                bboxes.append([sx,sy,ex,ey])
         else:
             bbox = fd.detect(image)
             # print(bbox)
             if len(bbox) != 4 or sum(bbox) < 1:
                 continue
             else:
-                sx, sy, ex, ey = bbox
+                bboxes.append(bbox)
+        count = 0
+        for bbox in bboxes:
+            sx,sy,ex,ey = bbox
+            # facial expression
+            pred_label, pred_sclore, pred_name = fer_mmcls(image, [sx,sy,ex,ey])
+            #pred_label, pred_sclore, pred_name = fer_scn(image, [sx, sy, ex, ey])
 
-        # facial expression
-        #pred_label, pred_sclore, pred_name = fer_mmcls(image, [sx,sy,ex,ey])
-        pred_label, pred_sclore, pred_name = fer_scn(image, [sx, sy, ex, ey])
+            # get face image
+            face_image,fsx,fsy,fex,fey = get_out_face_region(image, (sx,sy,ex,ey))
 
-        # debug
-        cv2.rectangle(image, (sx, sy), (ex, ey), (255, 0, 0), 10)
-        cv2.putText(image, '{}:{:.3f}'.format(pred_name, pred_sclore), (sx, sy - 20),
-                    0, 2, (0, 0, 255), 2)
-        cv2.imshow('debug', image)
-        if cv2.waitKey(0) & 0xff == ord('q'):
-            break
+            # copy image to sub dir
+            count += 1
+            dname = dir_label_map[pred_label]
+            dst_img_path = os.path.join(args.out_dir, dname, str(count)+'_'+os.path.basename(path))
+            cv2.imwrite(dst_img_path, face_image)
+
+            # debug
+            cv2.rectangle(image, (fsx, fsy), (fex, fey), (255, 0, 0), 10)
+            cv2.putText(image, '{}:{:.3f}'.format(pred_name, pred_sclore), (sx, sy - 20),
+                        0, 2, (0, 0, 255), 2)
+            cv2.imshow('debug', image)
+            if cv2.waitKey(0) & 0xff == ord('q'):
+                break
 
         # counter
         lock.acquire()
@@ -157,6 +193,15 @@ def multi_process(frames_list, args):
 
 def main():
     args = parse_args()
+
+    # create out dir
+    if not os.path.isdir(args.out_dir):
+        os.makedirs(args.out_dir)
+    for k in dir_label_map:
+        dname = dir_label_map[k]
+        dpath = os.path.join(args.out_dir, dname)
+        if not os.path.isdir(dpath):
+            os.makedirs(dpath)
 
     # get all images folders
     frames_list = glob.glob(os.path.join(args.src_folder, str(Path('*/'*args.level))))
