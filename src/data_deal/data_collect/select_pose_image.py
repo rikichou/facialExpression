@@ -1,3 +1,4 @@
+import shutil
 import sys
 import os
 
@@ -21,17 +22,10 @@ from pathlib import Path
 import cv2
 
 from utils.face_det_python import scrfd
-from utils.scn_python import scn
-from utils.mmcls_python import mmcls_fer
-from utils.face_pose_python import pose
 from utils.whenet_fpose_python import whenet_fpose
 from utils import common
 
 from multiprocessing import Process, Lock, Value
-
-dir_label_map = {0:'Angry', 1:'Happy', 2:'Neutral', 3:'Sad', 100:'pose', 101:'blur', 102:'size'}
-#dir_label_map = {'angry_heavy':0, 'angry_light':0, 'happy':1, 'neutral':2, 'sad_heavy':3, 'sad_light':3}
-#dir_label_map = {'angry_heavy': 0, 'happy': 1, 'neutral': 2, 'sad_heavy': 3}
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Build file list')
@@ -46,8 +40,6 @@ def parse_args():
         help='choose face detection handler, yolov5 or scrfd')
     parser.add_argument(
         '--ext', type=str, default='jpg', help='out name')
-    parser.add_argument(
-        '--mmcls_src_dir', default='/Users/zhourui/workspace/pro/source/mmclassification', type=str, help='mmclassification source dir')
     parser.add_argument(
         '--level',
         type=int,
@@ -104,15 +96,6 @@ def frame_deal(paths, args, lock, counter, total_length):
         args.imgsz = 640
         fd = FaceDetect(args=args)
 
-    # init facial expression model : mmclassification
-    fer_mmcls = mmcls_fer.MMCLSFer(config_file_path='utils/mmcls_python/models/resnet_18_dms_rgbnir/resnet_18_dms_rgbnir.py',
-                                   ckpt_path='utils/mmcls_python/models/resnet_18_dms_rgbnir/epoch_16.pth',
-                                   device='cpu' if args.cpu else 'cuda')
-    # init facial expression model : SCN
-    fer_scn = scn.ScnFacialExpressionCat(model_path='utils/scn_python/models/epoch26_acc0.8615.pth', device='cpu' if args.cpu else 'cuda')
-
-    # init face pose
-    #fpose = pose.Pose('utils/face_pose_python/model/aver_error_2.2484_epoch_53_multi.pkl', args.cpu)
     # init face pose
     fpose = whenet_fpose.Pose('../data_deal/utils/whenet_fpose_python/model/WHENet.h5')
 
@@ -138,50 +121,17 @@ def frame_deal(paths, args, lock, counter, total_length):
                 continue
             else:
                 bboxes.append(bbox)
-        count = 0
-        for bbox in bboxes:
-            sx,sy,ex,ey = bbox
-
-            # get face image
-            face_image,fsx,fsy,fex,fey = get_out_face_region(image, (sx,sy,ex,ey))
-
-            # Check 1: check if the bbox is too small
-            if ey-sy < 60:
-                dname = 'size'
-                dst_img_path = os.path.join(args.out_dir, dname,
-                                            os.path.basename(os.path.dirname(path)) + '_' + os.path.basename(path))
-                cv2.imwrite(dst_img_path, face_image)
-                continue
+        if len(bboxes) > 0:
+            sx,sy,ex,ey = bboxes[0]
 
             # Check 2: check if the angle is out of range
-            yaw_max = 50
+            yaw_max = 45
             pitch_max = 30
             yaw, pitch, roll = fpose(image, (sx, sy, ex, ey))
             if abs(yaw)>=yaw_max or abs(pitch)>=pitch_max:
-                dname = 'pose'
-                dst_img_path = os.path.join(args.out_dir, dname,
-                                            os.path.basename(os.path.dirname(path)) + '_' + os.path.basename(path))
-                cv2.imwrite(dst_img_path, face_image)
-                continue
-
-            # facial expression
-            pred_label, pred_sclore, pred_name = fer_mmcls(image, [sx,sy,ex,ey])
-            #pred_label, pred_sclore, pred_name = fer_scn(image, [sx, sy, ex, ey])
-
-            # copy image to sub dir
-            count += 1
-            dname = dir_label_map[pred_label]
-            dst_img_path = os.path.join(args.out_dir, dname, os.path.basename(os.path.dirname(path))+'_'+os.path.basename(path))
-            cv2.imwrite(dst_img_path, face_image)
-            #print(dst_img_path)
-
-            # debug
-            # cv2.rectangle(image, (fsx, fsy), (fex, fey), (255, 0, 0), 10)
-            # cv2.putText(image, '{}:{:.3f}'.format(pred_name, pred_sclore), (sx, sy - 20),
-            #             0, 2, (0, 0, 255), 2)
-            # cv2.imshow('debug', image)
-            # if cv2.waitKey(0) & 0xff == ord('q'):
-            #     break
+                dst_img_path = os.path.join(args.out_dir, os.path.basename(path))
+                shutil.copy(path, dst_img_path)
+                os.remove(path)
 
         # counter
         lock.acquire()
@@ -192,8 +142,6 @@ def frame_deal(paths, args, lock, counter, total_length):
                 print(f"{counter.value}/{total_length} done.")
         finally:
             lock.release()
-    # debug
-    cv2.destroyAllWindows()
 
 def multi_process(frames_list, args):
     process_num = args.num_worker
@@ -226,11 +174,6 @@ def main():
     # create out dir
     if not os.path.isdir(args.out_dir):
         os.makedirs(args.out_dir)
-    for k in dir_label_map:
-        dname = dir_label_map[k]
-        dpath = os.path.join(args.out_dir, dname)
-        if not os.path.isdir(dpath):
-            os.makedirs(dpath)
 
     # get all images folders
     frames_list = glob.glob(os.path.join(args.src_folder, str(Path('*/'*args.level))))
