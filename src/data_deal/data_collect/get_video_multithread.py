@@ -2,13 +2,9 @@ import os
 from tqdm import tqdm
 from multiprocessing import Pool
 from pytube import YouTube
+import argparse
 
 num_worker = 10
-
-vids_file_path = r'G:\pro\facialexpression\data\youtube\20210916_1936_dianyingfanushengqipianduan.txt'
-out_video_dir = r'G:\pro\facialexpression\data\youtube\video_multi'
-if not os.path.exists(out_video_dir):
-    os.makedirs(out_video_dir)
 
 def download(vid):
     # check if video is exist
@@ -20,11 +16,29 @@ def download(vid):
     base_url = 'https://www.youtube.com/watch?v='
     video_url = base_url + vid
     yt = YouTube(video_url)
-    handle = yt.streams.get_by_resolution('720p')
-    if handle:
-        handle.download(output_path=out_video_dir, filename=vid + '.mp4')
-    else:
-        yt.streams.get_highest_resolution().download(output_path=out_video_dir, filename=vid + '.mp4')
+
+    try:
+        handle = yt.streams.get_by_resolution('720p')
+        if not handle:
+            handle = yt.streams.get_highest_resolution()
+        # size check
+        video_size = handle.filesize/(1024*1024)
+        if video_size<=400:
+            handle.download(output_path=out_video_dir, filename=vid + '.mp4')
+        else:
+            print("video is too large: {} MB, skip".format(video_size))
+    except:
+        print("Some error in ", vid)
+
+def parse_args():
+    parser = argparse.ArgumentParser(description='download videos')
+    parser.add_argument(
+        'vids_file_path', type=str, help='file include vids')
+    parser.add_argument(
+        'out_video_dir', type=str, help='out name')
+
+    args = parser.parse_args()
+    return args
 
 def main():
     # get all vid list
@@ -36,4 +50,10 @@ def main():
             download,vids)))
 
 if __name__ == '__main__':
+    args = parse_args()
+    vids_file_path = args.vids_file_path
+    out_video_dir = args.out_video_dir
+    if not os.path.exists(out_video_dir):
+        os.makedirs(out_video_dir)
+
     main()
