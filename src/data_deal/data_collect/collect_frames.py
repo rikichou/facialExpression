@@ -154,7 +154,7 @@ def frame_deal(paths, args, lock, counter, total_length):
                 continue
 
             # Check 2: check if the angle is out of range
-            yaw_max = 50
+            yaw_max = 45
             pitch_max = 30
             yaw, pitch, roll = fpose(image, (sx, sy, ex, ey))
             if abs(yaw)>=yaw_max or abs(pitch)>=pitch_max:
