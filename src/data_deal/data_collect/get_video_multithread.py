@@ -7,6 +7,11 @@ import argparse
 num_worker = 10
 
 def download(vid):
+    # check if downloaded before
+    if vid in all_vids:
+        print("{} is in all_vids already!".format(vid))
+        return
+
     # check if video is exist
     out_video_path = os.path.join(out_video_dir, vid + '.mp4')
     if os.path.exists(out_video_path):
@@ -36,6 +41,8 @@ def parse_args():
         'vids_file_path', type=str, help='file include vids')
     parser.add_argument(
         'out_video_dir', type=str, help='out name')
+    parser.add_argument(
+        '--downloaded_video_names', type=str, default='all.txt', help='out name')
 
     args = parser.parse_args()
     return args
@@ -55,5 +62,7 @@ if __name__ == '__main__':
     out_video_dir = args.out_video_dir
     if not os.path.exists(out_video_dir):
         os.makedirs(out_video_dir)
+    with open(args.downloaded_video_names, 'r') as fp:
+        all_vids = [line.strip() for line in fp.readlines()]
 
     main()
