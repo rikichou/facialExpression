@@ -23,7 +23,6 @@ import cv2
 
 from utils.scn_python import scn
 from utils.mmcls_python import mmcls_fer
-from utils.face_pose_python import pose
 from utils.whenet_fpose_python import whenet_fpose
 from utils import common
 
