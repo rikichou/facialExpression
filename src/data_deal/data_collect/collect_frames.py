@@ -20,7 +20,7 @@ import glob
 from pathlib import Path
 import cv2
 
-from utils.face_det_python import scrfd
+
 from utils.scn_python import scn
 from utils.mmcls_python import mmcls_fer
 from utils.face_pose_python import pose
@@ -94,6 +94,7 @@ def get_out_face_region(image, rect):
 def frame_deal(paths, args, lock, counter, total_length):
     # init face detection model
     if args.use_scrfd:
+        from utils.face_det_python import scrfd
         fd = scrfd.ScrdfFaceDet(0.45,
                                 model_path='utils/face_det_python/models/model.pth',
                                 device='cpu' if args.cpu else 'cuda',
