@@ -12,7 +12,7 @@ elif sys.platform == 'win32':
     yolov5_src = r"D:\workspace\pro\source\yolov5"
 else:
     print('=>>>>load data from linux platform')
-    sys.path.append("/home/ruiming/workspace/pro/source/yolov5")
+    sys.path.append("/zhourui/workspace/pro/facialExpression/src/data_deal")
     yolov5_src = "/home/ruiming/workspace/pro/source/yolov5"
 
 import argparse
