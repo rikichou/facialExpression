@@ -117,6 +117,29 @@ def frame_deal(paths, args, lock, counter, total_length):
     fpose = whenet_fpose.Pose('../data_deal/utils/whenet_fpose_python/model/WHENet.h5')
 
     for path in paths:
+        # counter
+        lock.acquire()
+        try:
+            # p_bar.update(1)
+            counter.value += 1
+            if counter.value % 50 == 0:
+                print(f"{counter.value}/{total_length} done.")
+        finally:
+            lock.release()
+
+        # normal check
+        flag = 0
+        checklist = ['Angry', 'Happy','Neutral', 'Sad', 'pose','blur', 'size']
+
+        for dname in checklist:
+            dst_img_path = os.path.join(args.out_dir, dname,
+                                        os.path.basename(os.path.dirname(path)) + '_' + os.path.basename(path))
+            if os.path.exists(dst_img_path):
+                flag = 1
+                break
+        if flag == 1:
+            continue
+
         frame = cv2.imread(path)
         if frame is None:
             continue
@@ -150,7 +173,8 @@ def frame_deal(paths, args, lock, counter, total_length):
                 dname = 'size'
                 dst_img_path = os.path.join(args.out_dir, dname,
                                             os.path.basename(os.path.dirname(path)) + '_' + os.path.basename(path))
-                cv2.imwrite(dst_img_path, face_image)
+                if not os.path.exists(dst_img_path):
+                    cv2.imwrite(dst_img_path, face_image)
                 continue
 
             # Check 2: check if the angle is out of range
@@ -161,7 +185,8 @@ def frame_deal(paths, args, lock, counter, total_length):
                 dname = 'pose'
                 dst_img_path = os.path.join(args.out_dir, dname,
                                             os.path.basename(os.path.dirname(path)) + '_' + os.path.basename(path))
-                cv2.imwrite(dst_img_path, face_image)
+                if not os.path.exists(dst_img_path):
+                    cv2.imwrite(dst_img_path, face_image)
                 continue
 
             # facial expression
@@ -172,7 +197,8 @@ def frame_deal(paths, args, lock, counter, total_length):
             count += 1
             dname = dir_label_map[pred_label]
             dst_img_path = os.path.join(args.out_dir, dname, os.path.basename(os.path.dirname(path))+'_'+os.path.basename(path))
-            cv2.imwrite(dst_img_path, face_image)
+            if not os.path.exists(dst_img_path):
+                cv2.imwrite(dst_img_path, face_image)
             #print(dst_img_path)
 
             # debug
@@ -183,15 +209,15 @@ def frame_deal(paths, args, lock, counter, total_length):
             # if cv2.waitKey(0) & 0xff == ord('q'):
             #     break
 
-        # counter
-        lock.acquire()
-        try:
-            # p_bar.update(1)
-            counter.value += 1
-            if counter.value % 50 == 0:
-                print(f"{counter.value}/{total_length} done.")
-        finally:
-            lock.release()
+        # # counter
+        # lock.acquire()
+        # try:
+        #     # p_bar.update(1)
+        #     counter.value += 1
+        #     if counter.value % 50 == 0:
+        #         print(f"{counter.value}/{total_length} done.")
+        # finally:
+        #     lock.release()
     # debug
     cv2.destroyAllWindows()
 

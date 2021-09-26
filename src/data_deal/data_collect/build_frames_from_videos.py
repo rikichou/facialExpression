@@ -44,18 +44,19 @@ def extract_frame(vid_item):
     if not os.path.exists(out_full_path):
         os.makedirs(out_full_path)
     else:
-        total_count = len(glob.glob(os.path.join(out_full_path, "*.jpg")))
-        frame_cnt = vr.frame_cnt
-        if frame_cnt <= total_count:
-            skip_count += 1
-            tmp_name = vid_path.rsplit(str(Path('/')), maxsplit=1)[0]
-            if not tmp_name in skip_dict:
-                skip_dict[tmp_name] = 0
-            skip_dict[tmp_name] += 1
-            if skip_count%1000 == 0:
-                print(skip_dict)
-                sys.stdout.flush()
-            return True
+        return True
+        # total_count = len(glob.glob(os.path.join(out_full_path, "*.jpg")))
+        # frame_cnt = vr.frame_cnt
+        # if frame_cnt <= total_count:
+        #     skip_count += 1
+        #     tmp_name = vid_path.rsplit(str(Path('/')), maxsplit=1)[0]
+        #     if not tmp_name in skip_dict:
+        #         skip_dict[tmp_name] = 0
+        #     skip_dict[tmp_name] += 1
+        #     if skip_count%1000 == 0:
+        #         print(skip_dict)
+        #         sys.stdout.flush()
+        #     return True
 
     # for i in range(len(vr)):
     fps = int(vr.fps)
