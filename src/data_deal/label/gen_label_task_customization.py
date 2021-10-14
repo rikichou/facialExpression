@@ -3,12 +3,12 @@ sys.path.append('..')
 import os
 from utils import common
 
-DATASET_ROOT_DIR = '/train_tmp/fer/select/finish2'
-OUT_FILE_PATH = '/train_tmp/fer/select/finish2/train_mix.txt'
+DATASET_ROOT_DIR = r'E:\workspace\pro\facialExpression\data\select_finish2_rename'
+OUT_FILE_PATH = r'E:\workspace\pro\facialExpression\data\select_finish2_rename\train_clean.txt'
 
 phase = 'train'
-datasets = os.listdir(DATASET_ROOT_DIR)
-
+#datasets = os.listdir(DATASET_ROOT_DIR)
+datasets = ['Selected']
 with open(OUT_FILE_PATH, 'w') as fp:
     for dataset in datasets:
         dataset_dir = os.path.join(DATASET_ROOT_DIR, dataset)
@@ -23,7 +23,11 @@ with open(OUT_FILE_PATH, 'w') as fp:
         if 'streamax' in dataset:
             cats_map = {'happy':1, 'neutral':2}
         else:
-            cats_map = {'angry_heavy': 0, 'angry_light': 0, 'sad_heavy': 3, 'sad_light': 3, 'happy':1, 'neutral':2}
+            #cats_map = {'angry_heavy': 0, 'angry_light': 0, 'sad_heavy': 3, 'sad_light': 3, 'happy':1, 'neutral':2}
+            cats_map = {'angry_heavy': 0, 'angry_light': 0, 'angry_middle': 0,
+                        'sad_heavy': 3, 'sad_light': 3, 'sad_middle': 3,
+                        'happy': 1, 'happy_heavy':1, 'happy_light':1, 'happy_middle':1,
+                        'neutral': 2}
 
         for cat in cats_map:
             count = 0

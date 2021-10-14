@@ -23,6 +23,7 @@ from utils.face_det_python import scrfd
 from utils.scn_python import scn
 from utils.mmcls_python import mmcls_fer
 from utils.face_pose_python import pose
+from utils.whenet_fpose_python import whenet_fpose
 from utils import common
 
 from multiprocessing import Process, Lock, Value
@@ -90,9 +91,10 @@ def test_video(video_path, args):
     fer_scn = scn.ScnFacialExpressionCat(model_path='../data_deal/utils/scn_python/models/epoch26_acc0.8615.pth', device='cpu' if args.cpu else 'cuda')
 
     # init face pose
-    fpose = pose.Pose('../data_deal/utils/face_pose_python/model/aver_error_2.2484_epoch_53_multi.pkl', args.cpu)
+    #fpose = pose.Pose('../data_deal/utils/face_pose_python/model/aver_error_2.2484_epoch_53_multi.pkl', args.cpu)
+    fpose = whenet_fpose.Pose('../data_deal/utils/whenet_fpose_python/model/WHENet.h5')
 
-    if False:
+    if True:
         cap = cv2.VideoCapture(video_path)
     else:
         cap = cv2.VideoCapture(0)
@@ -100,8 +102,10 @@ def test_video(video_path, args):
         ret, frame = cap.read()
         if ret is False:
             break
+        #frame = cv2.imread(r'E:\workspace\pro\facialExpression\data\test\angry1.png')
+        frame = cv2.resize(frame,(704,396))
 
-        image = frame
+        image = frame.copy()
         if args.use_scrfd:
             result = fd.forward(image)
             if len(result) < 1:
@@ -120,28 +124,31 @@ def test_video(video_path, args):
                 sx, sy, ex, ey = bbox
 
         # face pose
-        yaw,pitch,roll = fpose(image, (sx,sy,ex,ey))
-        print(yaw)
-        print(pitch)
-        print(roll)
+        # yaw,pitch,roll = fpose(image, (sx,sy,ex,ey))
+        # print(yaw)
+        # print(pitch)
+        # print(roll)
 
         # facial expression
+        #pred_label, pred_sclore, pred_name = fer_mmcls(frame, [0, 0, 207, 288])
         #pred_label, pred_sclore, pred_name = fer_mmcls(image, [sx,sy,ex,ey])
         pred_label, pred_sclore, pred_name = fer_scn(image, [sx, sy, ex, ey])
         print(pred_label, pred_sclore, pred_name)
         # debug
         cv2.rectangle(image, (sx, sy), (ex, ey), (255, 0, 0), 10)
-        cv2.putText(image, '{:.2f} {:.2f} {:.2f}'.format(yaw, pitch, roll), (100, 50),
-                    0, 2, (0, 0, 255), 2)
-        cv2.putText(image, '{}:{:.3f}'.format(pred_name, pred_sclore), (sx, sy - 20),
-                    0, 2, (0, 0, 255), 2)
+        # cv2.putText(image, '{:.2f} {:.2f} {:.2f}'.format(yaw, pitch, roll), (100, 50),
+        #             0, 1, (0, 0, 255), 1)
+        cv2.putText(image, '{}:{:.3f}'.format(pred_name, pred_sclore), (sx, sy - 5),
+                    0, 1, (0, 0, 255), 1)
         cv2.imshow('debug', image)
+        #cv2.imwrite(r'E:\workspace\pro\facialExpression\data\test\angry1_out.jpg', image)
         if cv2.waitKey(1) & 0xff == ord('q'):
             break
+
     # debug
     cv2.destroyAllWindows()
 
-VIDEO_PATH = r'E:\workspace\pro\facialExpression\data\kehu\test.mp4'
+VIDEO_PATH = r'E:\workspace\pro\facialExpression\data\test\test.mp4'
 
 class Obj(object):
     def __init__(self):
