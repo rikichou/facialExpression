@@ -46,8 +46,8 @@ for p in statistics:
             continue
         dst_facerect_path = os.path.join(OUT_IMG_ROOT_DIR, facerect_name)
 
-        shutil.copy(src_img_path, dst_img_path)
-        shutil.copy(src_facerect_path, dst_facerect_path)
+        # shutil.copy(src_img_path, dst_img_path)
+        # shutil.copy(src_facerect_path, dst_facerect_path)
         count += 1
 
 print("Get {} samples!".format(count))
