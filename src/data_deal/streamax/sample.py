@@ -4,8 +4,8 @@ import shutil
 import glob
 
 SAMPLES_PER_VIDEO = 5
-IMG_ROOT_DIR = r'/home/ruiming/workspace/pro/facialExpression/data/select/finish2/streamax_0825/train/happy'
-OUT_IMG_ROOT_DIR = r'/home/ruiming/workspace/pro/facialExpression/data/select/streamax/train/happy'
+IMG_ROOT_DIR = r'/home/ruiming/workspace/pro/facialExpression/data/select/finish2/streamax_0825/train/neutral'
+OUT_IMG_ROOT_DIR = r'/home/ruiming/workspace/pro/facialExpression/data/select/streamax/train/neutral'
 if not os.path.exists(OUT_IMG_ROOT_DIR):
     os.makedirs(OUT_IMG_ROOT_DIR)
 
