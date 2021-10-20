@@ -23,5 +23,5 @@ for img in imgs:
 items = statistics.items()
 soted = sorted(items, key=lambda x:len(x[1]), reverse=True)
 
-print("Total {} images, {} videos, max {}, min {}".format(len(imgs), len(statistics), max(statistics.values()), min(statistics.values())))
+print("Total {} images, {} videos, max {}, min {}".format(len(imgs), len(statistics), len(statistics[soted[0][0]]), len(statistics[soted[-1][0]])))
 print(soted[0][0], statistics[soted[0][0]])
