@@ -20,4 +20,8 @@ for img in imgs:
 
     statistics[v].append(img)
 
-print(statistics)
+items = statistics.items()
+soted = sorted(items, key=lambda x:len(x[1]), reverse=True)
+
+print("Total {} images, {} videos, max {}, min {}".format(len(imgs), len(statistics), max(statistics.values()), min(statistics.values())))
+print(soted[0][0], statistics[soted[0][0]])
