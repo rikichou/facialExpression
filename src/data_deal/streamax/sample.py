@@ -39,7 +39,7 @@ for p in statistics:
         src_img_path = img
         dst_img_path = os.path.join(OUT_IMG_ROOT_DIR, name)
 
-        facerect_name = os.path.splitext(img)[0]+'.facerect'
+        facerect_name = os.path.splitext(name)[0]+'.facerect'
         src_facerect_path = os.path.join(dirname, facerect_name)
         if not os.path.exists(src_facerect_path):
             print("Not exist ", src_facerect_path)
