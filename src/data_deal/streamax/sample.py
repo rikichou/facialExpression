@@ -13,7 +13,7 @@ imgs = glob.glob(IMG_ROOT_DIR+'/*.jpg')
 statistics = {}
 for img in imgs:
     name = os.path.basename(img)
-    v = name[:6]
+    v = name[:5]
 
     if v not in statistics:
         statistics[v] = []
