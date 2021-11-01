@@ -5,7 +5,7 @@ import cv2
 import xml.dom.minidom
 
 IMG_ROOT_DIR = '/home/ruiming/workspace/pro/facialExpression/data/org/ExpW/data/image/cat'
-IMG_OUT_ROOT_DIR = '/home/ruiming/workspace/pro/facialExpression/data/surprise_face/ExpW/'
+IMG_OUT_ROOT_DIR = '/home/ruiming/workspace/pro/facialExpression/data/surprise/ExpW/cat'
 if not os.path.exists(IMG_OUT_ROOT_DIR):
     os.makedirs(IMG_OUT_ROOT_DIR)
 
@@ -40,7 +40,7 @@ def get_xml_infos(xmlpath):
 
     return infos
 
-category_dirs = os.listdir(IMG_ROOT_DIR)
+category_dirs = ['surprise']
 
 for cat_name in category_dirs:
     cat_dir = os.path.join(IMG_ROOT_DIR, cat_name)
