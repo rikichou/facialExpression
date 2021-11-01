@@ -4,15 +4,14 @@ from tqdm import tqdm
 
 YouTube('https://youtu.be/2lAe1cqCOXo').streams.first().download()
 
-out_vid_file_path = r'G:\pro\facialexpression\data\youtube\20210917_1449_dianshijuzhongdebiaoqingbao.txt'
-out_video_dir = r'G:\pro\facialexpression\data\youtube\video'
+out_vid_file_path = r'./20211015_nushi.txt'
 max_num = 50
 
 #next_page = 'CN4CEAA'
 next_page = None
 
 # search keyword
-keywords = '电视剧中的表情包'
+keywords = '怒视'
 #api_key = 'AIzaSyC7ihXkK4J-k3-j2gn4o_h-BFj2vlbyz0A'
 api_key = 'AIzaSyAN5OBa3B_xvTGk6fe6H9iRGrobs72xVLw'
 api_uri = 'https://www.googleapis.com/youtube/v3/'
