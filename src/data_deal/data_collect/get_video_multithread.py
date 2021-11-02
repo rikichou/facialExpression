@@ -1,20 +1,24 @@
 import os
+import sys
 from tqdm import tqdm
 from multiprocessing import Pool
 from pytube import YouTube
 import argparse
 
-num_worker = 10
+num_worker = 8
 
 def download(vid):
+    global all_vids
+    global args
     # check if downloaded before
     if vid in all_vids:
         print("{} is in all_vids already!".format(vid))
         return
 
     # check if video is exist
-    out_video_path = os.path.join(out_video_dir, vid + '.mp4')
+    out_video_path = os.path.join(args.out_video_dir, vid + '.mp4')
     if os.path.exists(out_video_path):
+        print("{} is downloaded before!".format(vid))
         return
 
     # download vide
@@ -29,7 +33,7 @@ def download(vid):
         # size check
         video_size = handle.filesize/(1024*1024)
         if video_size<=400:
-            handle.download(output_path=out_video_dir, filename=vid + '.mp4')
+            handle.download(output_path=args.out_video_dir, filename=vid + '.mp4')
         else:
             print("video is too large: {} MB, skip".format(video_size))
     except:
@@ -55,14 +59,13 @@ def main():
     with Pool(num_worker) as pool:
         r = list(tqdm(pool.imap(
             download,vids)))
-
+args = parse_args()
+all_vids = []
 if __name__ == '__main__':
-    args = parse_args()
     vids_file_path = args.vids_file_path
     out_video_dir = args.out_video_dir
     if not os.path.exists(out_video_dir):
         os.makedirs(out_video_dir)
     with open(args.downloaded_video_names, 'r') as fp:
         all_vids = [line.strip() for line in fp.readlines()]
-
     main()

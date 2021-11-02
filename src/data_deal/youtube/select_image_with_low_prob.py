@@ -1,3 +1,4 @@
+import shutil
 import sys
 import os
 
@@ -22,7 +23,6 @@ import cv2
 from utils.face_det_python import scrfd
 from utils.scn_python import scn
 from utils.mmcls_python import mmcls_fer
-from utils.fer_streamax_cls_python import fer_streamax_cls
 from utils.face_pose_python import pose
 from utils.whenet_fpose_python import whenet_fpose
 from utils import common
@@ -68,16 +68,16 @@ def parse_args():
     args = parser.parse_args()
     return args
 
-def test_video(video_path, args):
+def test_video(imgs_dir, args):
     args.use_scrfd = True
     args.cpu = False
 
     # init face detection model
     if args.use_scrfd:
         fd = scrfd.ScrdfFaceDet(0.45,
-                                model_path='../data_deal/utils/face_det_python/models/model.pth',
+                                model_path='../utils/face_det_python/models/model.pth',
                                 device='cpu' if args.cpu else 'cuda',
-                                config='../data_deal/utils/face_det_python/models/scrfd_500m.py')
+                                config='../utils/face_det_python/models/scrfd_500m.py')
     else:
         from FaceDetection import FaceDetect
         args.weights = os.path.join(yolov5_src, 'weights/200_last.pt')
@@ -85,44 +85,36 @@ def test_video(video_path, args):
         fd = FaceDetect(args=args)
 
     # init facial expression model : mmclassification
-    # model_name = 'resnet_18_dms_rgbnir'
-    # epoch = 16
-    # input_channels = 3
-
-    model_name = 'res14_clean1023_middle'
-    epoch = 26
-    input_channels = 1
-
-    #model_name = 'resnet_14_tiny_1019'
-    #epoch = 27
-    #input_channels = 1
-
-    fer_mmcls = mmcls_fer.MMCLSFer(config_file_path='../data_deal/utils/mmcls_python/models/{}/{}.py'.format(model_name, model_name),
-                                   ckpt_path='../data_deal/utils/mmcls_python/models/{}/epoch_{}.pth'.format(model_name, epoch),
+    #model_name = 'resnet_18_dms_rgbnir'
+    model_name = 'resnet_14_tiny_clean'
+    epoch = 100
+    fer_mmcls = mmcls_fer.MMCLSFer(config_file_path='../utils/mmcls_python/models/{}/{}.py'.format(model_name, model_name),
+                                   ckpt_path='../utils/mmcls_python/models/{}/epoch_{}.pth'.format(model_name, epoch),
                                    device='cpu' if args.cpu else 'cuda',
-                                   input_channels=input_channels)
-
-    dirname = 'clean1026_nodms'
-    epoch = 16
-    fer_streamax = fer_streamax_cls.FerSteamaxCls(ckpt_path='../data_deal/utils/fer_streamax_cls_python/models/{}/epoch_{}.pth.tar'.format(dirname, epoch),
-                                                  device='cpu' if args.cpu else 'cuda')
+                                   input_channels=1)
     # init facial expression model : SCN
-    fer_scn = scn.ScnFacialExpressionCat(model_path='../data_deal/utils/scn_python/models/epoch26_acc0.8615.pth', device='cpu' if args.cpu else 'cuda')
+    fer_scn = scn.ScnFacialExpressionCat(model_path='../utils/scn_python/models/epoch26_acc0.8615.pth', device='cpu' if args.cpu else 'cuda')
 
     # init face pose
     #fpose = pose.Pose('../data_deal/utils/face_pose_python/model/aver_error_2.2484_epoch_53_multi.pkl', args.cpu)
-    fpose = whenet_fpose.Pose('../data_deal/utils/whenet_fpose_python/model/WHENet.h5')
+    fpose = whenet_fpose.Pose('../utils/whenet_fpose_python/model/WHENet.h5')
 
-    if False:
-        cap = cv2.VideoCapture(video_path)
-    else:
-        cap = cv2.VideoCapture(0)
-    while True:
-        ret, frame = cap.read()
-        if ret is False:
-            break
-        #frame = cv2.imread(r'E:\workspace\pro\facialExpression\data\Selected\train\sad_heavy\AffectNet_00d1f61204dee14bb66736e6d12adfb7bed9e862f032d918c40336bf.jpg')
-        #frame = cv2.resize(frame,(704,396))
+    imgs = os.listdir(imgs_dir)
+
+    def is_image(name):
+        img_ext = ['.jpg', '.jpeg', '.png', '.bmp', '.tif']
+        prefix, ext = os.path.splitext(name)
+        ext = ext.lower()
+        if ext in img_ext:
+            return True
+        else:
+            return False
+
+    for idx,img in enumerate(imgs):
+        if not is_image(img):
+            continue
+        img_path = os.path.join(imgs_dir, img)
+        frame = cv2.imread(img_path)
 
         image = frame.copy()
         if args.use_scrfd:
@@ -150,34 +142,45 @@ def test_video(video_path, args):
 
         # facial expression
         #pred_label, pred_sclore, pred_name = fer_mmcls(frame, [0, 0, 207, 288])
-        #pred_label, pred_sclore, pred_name = fer_mmcls(image, [sx,sy,ex,ey])
-        pred_label, pred_sclore, pred_name = fer_streamax(image, [sx,sy,ex,ey])
+        pred_label, pred_sclore, pred_name = fer_mmcls(image, [sx,sy,ex,ey])
         #pred_label, pred_sclore, pred_name = fer_scn(image, [sx, sy, ex, ey])
-        print(pred_label, pred_sclore, pred_name)
-        # debug
-        cv2.rectangle(image, (sx, sy), (ex, ey), (255, 0, 0), 10)
-        # cv2.putText(image, '{:.2f} {:.2f} {:.2f}'.format(yaw, pitch, roll), (100, 50),
-        #             0, 1, (0, 0, 255), 1)
-        cv2.putText(image, '{}:{:.3f}'.format(pred_name, pred_sclore), (sx, sy - 5),
-                    0, 1, (0, 0, 255), 1)
-        cv2.imshow('debug', image)
-        #cv2.imwrite(r'E:\workspace\pro\facialExpression\data\test\angry1_out.jpg', image)
-        if cv2.waitKey(1) & 0xff == ord('q'):
-            break
 
-    # debug
-    cv2.destroyAllWindows()
+        # save results
+        if pred_name == 'Neutral' and pred_sclore>0.4:
+            continue
 
-#VIDEO_PATH = r'E:\workspace\pro\facialExpression\data\test\test.mp4'
-#VIDEO_PATH = r'E:\workspace\pro\facialExpression\data\test\NIR\20210810\0000000000000000-210810-201218-201303-000006000190.avi'
-VIDEO_PATH = r'E:\workspace\pro\facialExpression\data\test\NIR\20210811\0000000000000000-210811-172220-172300-000006000200.avi'
-#VIDEO_PATH = r'E:\workspace\pro\facialExpression\data\test\kehu\test.mp4'
-#VIDEO_PATH = r'E:\workspace\pro\facialExpression\data\test\NIR\1026\1.avi'
+        out_dir = os.path.join(imgs_dir, pred_name)
+        if not os.path.exists(out_dir):
+            os.makedirs(out_dir)
+        out_path = os.path.join(out_dir, img)
+        shutil.copy(img_path, out_path)
+        os.remove(img_path)
+
+        if idx%1000 == 0:
+            print("{}/{}".format(idx,len(imgs)))
+
+    #     # debug
+    #     print(pred_label, pred_sclore, pred_name)
+    #     cv2.rectangle(image, (sx, sy), (ex, ey), (255, 0, 0), 10)
+    #     # cv2.putText(image, '{:.2f} {:.2f} {:.2f}'.format(yaw, pitch, roll), (100, 50),
+    #     #             0, 1, (0, 0, 255), 1)
+    #     cv2.putText(image, '{}:{:.3f}'.format(pred_name, pred_sclore), (sx, sy - 5),
+    #                 0, 1, (0, 0, 255), 1)
+    #     cv2.imshow('debug', image)
+    #     #cv2.imwrite(r'E:\workspace\pro\facialExpression\data\test\angry1_out.jpg', image)
+    #     if cv2.waitKey(1) & 0xff == ord('q'):
+    #         break
+    #
+    # # debug
+    # cv2.destroyAllWindows()
+
+IMG_ROOT_DIR = r'G:\pro\facialexpression\data\youtube\expression\Neutral_toselect'
+
 class Obj(object):
     def __init__(self):
         super().__init__()
 
 args = Obj()
 
-test_video(VIDEO_PATH, args)
+test_video(IMG_ROOT_DIR, args)
 

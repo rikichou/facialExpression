@@ -105,9 +105,15 @@ def frame_deal(paths, args, lock, counter, total_length):
         fd = FaceDetect(args=args)
 
     # init facial expression model : mmclassification
-    fer_mmcls = mmcls_fer.MMCLSFer(config_file_path='utils/mmcls_python/models/resnet_18_dms_rgbnir/resnet_18_dms_rgbnir.py',
-                                   ckpt_path='utils/mmcls_python/models/resnet_18_dms_rgbnir/epoch_16.pth',
-                                   device='cpu' if args.cpu else 'cuda')
+    # fer_mmcls = mmcls_fer.MMCLSFer(config_file_path='utils/mmcls_python/models/resnet_18_dms_rgbnir/resnet_18_dms_rgbnir.py',
+    #                                ckpt_path='utils/mmcls_python/models/resnet_18_dms_rgbnir/epoch_16.pth',
+    #                                device='cpu' if args.cpu else 'cuda')
+    model_name = 'res14_clean1026'
+    epoch = 28
+    fer_mmcls = mmcls_fer.MMCLSFer(config_file_path='utils/mmcls_python/models/{}/{}.py'.format(model_name, model_name),
+                                   ckpt_path='utils/mmcls_python/models/{}/epoch_{}.pth'.format(model_name, epoch),
+                                   device='cpu' if args.cpu else 'cuda',
+                                   input_channels=1)
     # init facial expression model : SCN
     fer_scn = scn.ScnFacialExpressionCat(model_path='utils/scn_python/models/epoch26_acc0.8615.pth', device='cpu' if args.cpu else 'cuda')
 

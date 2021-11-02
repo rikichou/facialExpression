@@ -5,7 +5,7 @@ import cv2
 import xml.dom.minidom
 
 IMG_ROOT_DIR = '/home/ruiming/workspace/pro/facialExpression/data/org/ExpW/data/image/cat'
-IMG_OUT_ROOT_DIR = '/home/ruiming/workspace/pro/facialExpression/data/surprise_face/ExpW/'
+IMG_OUT_ROOT_DIR = '/home/ruiming/workspace/pro/facialExpression/data/out/FacialExpressionOrignialData/ExpW/train'
 if not os.path.exists(IMG_OUT_ROOT_DIR):
     os.makedirs(IMG_OUT_ROOT_DIR)
 
