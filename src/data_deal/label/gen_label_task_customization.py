@@ -3,12 +3,12 @@ sys.path.append('..')
 import os
 from utils import common
 
-DATASET_ROOT_DIR = r'E:\workspace\pro\facialExpression\data\select_finish2_rename'
-OUT_FILE_PATH = r'E:\workspace\pro\facialExpression\data\select_finish2_rename\train_clean.txt'
+DATASET_ROOT_DIR = r'/home/ruiming/workspace/pro/facialExpression/data/select'
+OUT_FILE_PATH = r'/home/ruiming/workspace/pro/facialExpression/data/select/clean_1029/train5.txt'
 
 phase = 'train'
 #datasets = os.listdir(DATASET_ROOT_DIR)
-datasets = ['Selected']
+datasets = ['clean_1029']
 with open(OUT_FILE_PATH, 'w') as fp:
     for dataset in datasets:
         dataset_dir = os.path.join(DATASET_ROOT_DIR, dataset)
@@ -27,7 +27,8 @@ with open(OUT_FILE_PATH, 'w') as fp:
             cats_map = {'angry_heavy': 0, 'angry_light': 0, 'angry_middle': 0,
                         'sad_heavy': 3, 'sad_light': 3, 'sad_middle': 3,
                         'happy': 1, 'happy_heavy':1, 'happy_light':1, 'happy_middle':1,
-                        'neutral': 2}
+                        'neutral': 2, 'neutral_bigangle':2, 'neutral_occlusion':2,
+                        'surprise':4}
 
         for cat in cats_map:
             count = 0
