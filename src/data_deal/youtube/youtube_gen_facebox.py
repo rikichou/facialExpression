@@ -4,13 +4,13 @@ import os
 
 import cv2
 
-from utils.face_det_python.scrfd import ScrdfFaceDet
-from utils import common
+from common_utils.face_det_python.scrfd import ScrdfFaceDet
+from common_utils import common
 
-IMG_ROOT_DIR = r'E:\workspace\pro\facialExpression\data\shixisheng_selected\youtube\1029\org_rename\wzw'
+IMG_ROOT_DIR = r'E:\workspace\pro\facialExpression\data\shixisheng_selected\public_dataset\1105\org_rename\zxx1\train'
 
 # model init
-fd = ScrdfFaceDet(0.2, model_path='../utils/face_det_python/models/model.pth', config='../utils/face_det_python/models/scrfd_500m.py', device='cuda')
+fd = ScrdfFaceDet(0.2, model_path='../common_utils/face_det_python/models/model.pth', config='../common_utils/face_det_python/models/scrfd_500m.py', device='cuda')
 
 subdirs = os.listdir(IMG_ROOT_DIR)
 subdirs.sort()
