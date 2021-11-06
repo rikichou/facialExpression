@@ -19,12 +19,13 @@ import glob
 from pathlib import Path
 import cv2
 
-from utils.face_det_python import scrfd
-from utils.scn_python import scn
-from utils.mmcls_python import mmcls_fer
-from utils.face_pose_python import pose
-from utils.whenet_fpose_python import whenet_fpose
-from utils import common
+from common_utils.face_det_python import scrfd
+from common_utils.scn_python import scn
+from common_utils.mmcls_python import mmcls_fer
+from common_utils.face_pose_python import pose
+from common_utils.whenet_fpose_python import whenet_fpose
+from common_utils.fer_streamax_cls_python import fer_streamax_cls
+from common_utils import common
 
 from multiprocessing import Process, Lock, Value
 
@@ -105,9 +106,9 @@ def test_img(img_dir, args):
     # init face detection model
     if args.use_scrfd:
         fd = scrfd.ScrdfFaceDet(0.45,
-                                model_path='../data_deal/utils/face_det_python/models/model.pth',
+                                model_path='../data_deal/common_utils/face_det_python/models/model.pth',
                                 device='cpu' if args.cpu else 'cuda',
-                                config='../data_deal/utils/face_det_python/models/scrfd_500m.py')
+                                config='../data_deal/common_utils/face_det_python/models/scrfd_500m.py')
     else:
         from FaceDetection import FaceDetect
         args.weights = os.path.join(yolov5_src, 'weights/200_last.pt')
@@ -127,16 +128,21 @@ def test_img(img_dir, args):
     #epoch = 27
     #input_channels = 1
 
-    fer_mmcls = mmcls_fer.MMCLSFer(config_file_path='../data_deal/utils/mmcls_python/models/{}/{}.py'.format(model_name, model_name),
-                                   ckpt_path='../data_deal/utils/mmcls_python/models/{}/epoch_{}.pth'.format(model_name, epoch),
+    fer_mmcls = mmcls_fer.MMCLSFer(config_file_path='../data_deal/common_utils/mmcls_python/models/{}/{}.py'.format(model_name, model_name),
+                                   ckpt_path='../data_deal/common_utils/mmcls_python/models/{}/epoch_{}.pth'.format(model_name, epoch),
                                    device='cpu' if args.cpu else 'cuda',
                                    input_channels=input_channels)
+    dirname = 'clean1026_nodms'
+    epoch = 16
+    fer_streamax = fer_streamax_cls.FerSteamaxCls(ckpt_path='../data_deal/common_utils/fer_streamax_cls_python/models/{}/epoch_{}.pth.tar'.format(dirname, epoch),
+                                                  device='cpu' if args.cpu else 'cuda')
+
     # init facial expression model : SCN
-    fer_scn = scn.ScnFacialExpressionCat(model_path='../data_deal/utils/scn_python/models/epoch26_acc0.8615.pth', device='cpu' if args.cpu else 'cuda')
+    fer_scn = scn.ScnFacialExpressionCat(model_path='../data_deal/common_utils/scn_python/models/epoch26_acc0.8615.pth', device='cpu' if args.cpu else 'cuda')
 
     # init face pose
     #fpose = pose.Pose('../data_deal/utils/face_pose_python/model/aver_error_2.2484_epoch_53_multi.pkl', args.cpu)
-    fpose = whenet_fpose.Pose('../data_deal/utils/whenet_fpose_python/model/WHENet.h5')
+    fpose = whenet_fpose.Pose('../data_deal/common_utils/whenet_fpose_python/model/WHENet.h5')
 
     imgs = os.listdir(img_dir)
     for img in imgs:
@@ -172,7 +178,8 @@ def test_img(img_dir, args):
 
         # facial expression
         #pred_label, pred_sclore, pred_name = fer_mmcls(frame, [0, 0, 207, 288])
-        pred_label, pred_sclore, pred_name = fer_mmcls(image, [sx,sy,ex,ey])
+        #pred_label, pred_sclore, pred_name = fer_mmcls(image, [sx,sy,ex,ey])
+        pred_label, pred_sclore, pred_name = fer_streamax(image, [sx, sy, ex, ey])
         #pred_label, pred_sclore, pred_name = fer_scn(image, [sx, sy, ex, ey])
         print(pred_label, pred_sclore, pred_name)
         # debug
@@ -195,7 +202,7 @@ def test_img(img_dir, args):
 #VIDEO_PATH = r'E:\workspace\pro\facialExpression\data\test\NIR\20210811\0000000000000000-210811-172220-172300-000006000200.avi'
 #VIDEO_PATH = r'E:\workspace\pro\facialExpression\data\test\kehu\test.mp4'
 
-IMG_ROOT_DIR = r'E:\workspace\pro\facialExpression\data\test\NIR\1026'
+IMG_ROOT_DIR = r'E:\software\nvtai_tool\config\facial_expression\cnn25\data\test'
 
 class Obj(object):
     def __init__(self):
