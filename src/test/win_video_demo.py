@@ -118,7 +118,7 @@ def test_video(video_path, args):
     #fpose = pose.Pose('../data_deal/utils/face_pose_python/model/aver_error_2.2484_epoch_53_multi.pkl', args.cpu)
     fpose = whenet_fpose.Pose('../data_deal/common_utils/whenet_fpose_python/model/WHENet.h5')
 
-    if True:
+    if False:
         cap = cv2.VideoCapture(video_path)
     else:
         cap = cv2.VideoCapture(0)
@@ -166,8 +166,8 @@ def test_video(video_path, args):
 
         # facial expression
         #pred_label, pred_sclore, pred_name = fer_mmcls(frame, [0, 0, 207, 288])
-        #pred_label, pred_sclore, pred_name = fer_mmcls(image, [sx,sy,ex,ey])
-        pred_label, pred_sclore, pred_name = fer_streamax(image, [sx,sy,ex,ey])
+        pred_label, pred_sclore, pred_name = fer_mmcls(image, [sx,sy,ex,ey])
+        #pred_label, pred_sclore, pred_name = fer_streamax(image, [sx,sy,ex,ey])
         #pred_label, pred_sclore, pred_name = fer_scn(image, [sx, sy, ex, ey])
         print(pred_label, pred_sclore, pred_name)
         # debug

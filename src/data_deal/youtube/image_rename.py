@@ -3,10 +3,10 @@ import os
 import glob
 import shutil
 
-IMG_ROOT_DIR = r'E:\workspace\pro\facialExpression\data\shixisheng_selected\youtube\1029\org'
-OUT_IMG_ROOT_DIR = r'E:\workspace\pro\facialExpression\data\shixisheng_selected\youtube\1029\org_rename'
+IMG_ROOT_DIR = r'E:\workspace\pro\facialExpression\data\shixisheng_selected\public_dataset\1108\org'
+OUT_IMG_ROOT_DIR = r'E:\workspace\pro\facialExpression\data\shixisheng_selected\public_dataset\1108\org_rename'
 
-imgs = glob.glob(IMG_ROOT_DIR + r'\*\*\*')
+imgs = glob.glob(IMG_ROOT_DIR + r'\*\*')
 
 def is_image(name):
     img_ext = ['.jpg', '.jpeg', '.png', '.bmp', '.tif']
